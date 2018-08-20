@@ -1,4 +1,6 @@
-# memefs - Mount your memes using FUSE
+# memefs - A filesystem for your memes
+
+**Mount your memes using FUSE**
 
 > Every meme is a file in unix
 
