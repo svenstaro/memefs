@@ -18,7 +18,6 @@ use reqwest::header::ContentLength;
 use serde_json::Value;
 use std::cmp::min;
 use std::ffi::OsStr;
-use std::io::Write;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -190,7 +189,7 @@ impl Filesystem for MemeFS {
 fn get_memes() -> Vec<Post> {
     let req_client = reqwest::Client::new();
     let resp: Value = req_client
-        .get("https://www.reddit.com/user/Hydrauxine/m/memes/.json?limit=1")
+        .get("https://www.reddit.com/user/Hydrauxine/m/memes/.json?limit=20")
         .send()
         .expect("Error while fetching posts")
         .json()
