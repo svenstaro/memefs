@@ -62,7 +62,7 @@ fn file_attr(ino: u64, size: u64) -> FileAttr {
         ctime: current_time,
         crtime: current_time,
         kind: FileType::RegularFile,
-        perm: 0o644,
+        perm: 0o444,
         nlink: 0,
         uid: 0,
         gid: 0,
