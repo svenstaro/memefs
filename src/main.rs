@@ -29,6 +29,19 @@ lazy_static! {
     static ref MEMES: Mutex<Vec<Post>> = { Mutex::new(Vec::default()) };
 }
 
+lazy_static! {
+    static ref MEMEFSCONFIG: Mutex<MemeFSConfig> = Default::default();
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct MemeFSConfig {
+    mountpoint: String,
+    verbose: bool,
+    subreddit: String,
+    limit: u16,
+    refresh_secs: u32,
+}
+
 fn dir_attr(ino: u64, size: u64) -> FileAttr {
     let current_time = time::get_time();
 
@@ -186,11 +199,14 @@ impl Filesystem for MemeFS {
     }
 }
 
-fn get_memes() -> Vec<Post> {
+fn get_memes(memefs_config: &MemeFSConfig) -> Vec<Post> {
     let req_client = reqwest::Client::new();
     let resp: Value = req_client
-        .get("https://www.reddit.com/user/Hydrauxine/m/memes/.json?limit=20")
-        .send()
+        .get(&format!(
+            "{subreddit}/.json?limit={limit}",
+            subreddit = memefs_config.subreddit,
+            limit = memefs_config.limit
+        )).send()
         .expect("Error while fetching posts")
         .json()
         .expect("Can't parse posts as JSON");
@@ -243,7 +259,7 @@ fn get_memes() -> Vec<Post> {
     memes
 }
 
-fn main() {
+fn parse_args() {
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
@@ -253,8 +269,50 @@ fn main() {
                 .help("Choose the mountpoint")
                 .required(true)
                 .index(1),
+        ).arg(
+            Arg::with_name("verbose")
+                .help("Be verbose")
+                .short("v")
+                .long("verbose"),
+        ).arg(
+            Arg::with_name("subreddit")
+                .help("Pick a subreddit or multi")
+                .short("s")
+                .default_value("https://www.reddit.com/user/Hydrauxine/m/memes")
+                .takes_value(true),
+        ).arg(
+            Arg::with_name("limit")
+                .help("How many memes to fetch at once")
+                .short("l")
+                .default_value("20")
+                .takes_value(true),
+        ).arg(
+            Arg::with_name("refresh_secs")
+                .help("How often to refresh your memes in secs")
+                .short("r")
+                .default_value("600")
+                .takes_value(true),
         ).get_matches();
-    let mountpoint = matches.value_of("MOUNTPOINT").unwrap();
+    let mountpoint = matches.value_of("MOUNTPOINT").unwrap().to_owned();
+    let verbose = matches.is_present("verbose");
+    let subreddit = matches.value_of("subreddit").unwrap().to_owned();
+    let limit = value_t_or_exit!(matches.value_of("limit"), u16);
+    let refresh_secs = value_t_or_exit!(matches.value_of("refresh_secs"), u32);
+
+    {
+        let mut config = MEMEFSCONFIG
+            .lock()
+            .expect("Couldn't acquire lock to MEMEFSCONFIG in main()");
+        config.mountpoint = mountpoint;
+        config.verbose = verbose;
+        config.subreddit = subreddit;
+        config.limit = limit;
+        config.refresh_secs = refresh_secs;
+    }
+}
+
+fn main() {
+    parse_args();
 
     let options = ["-o", "ro", "-o", "fsname=memefs"]
         .iter()
@@ -268,20 +326,34 @@ fn main() {
         r.store(false, Ordering::SeqCst);
     }).expect("Error setting Ctrl-C handler");
 
-    let _thread_handle = thread::spawn(|| loop {
+    let _thread_handle = thread::spawn(move || loop {
+        let config = MEMEFSCONFIG
+            .lock()
+            .expect("Couldn't acquire lock to MEMEFSCONFIG in main()")
+            .clone();
+
         {
-            let mut memes = MEMES.lock().expect("Couldn't acquire lock in main()");
-            let new_memes = get_memes();
+            let mut memes = MEMES
+                .lock()
+                .expect("Couldn't acquire lock to MEMES in main()");
+            if config.verbose {
+                println!("Refreshing memes");
+            }
+            let new_memes = get_memes(&config);
             memes.clear();
             memes.extend(new_memes);
         }
 
-        thread::sleep(Duration::from_secs(600));
+        thread::sleep(Duration::from_secs(config.refresh_secs.into()));
     });
 
+    let config = MEMEFSCONFIG
+        .lock()
+        .expect("Couldn't acquire lock to MEMEFSCONFIG in main()")
+        .clone();
     unsafe {
-        println!("Mounting to {}", mountpoint);
-        let _fuse_handle = fuse::spawn_mount(MemeFS, &mountpoint, &options).unwrap();
+        println!("Mounting to {}", config.mountpoint);
+        let _fuse_handle = fuse::spawn_mount(MemeFS, &config.mountpoint, &options).unwrap();
 
         while running.load(Ordering::SeqCst) {
             thread::sleep(Duration::from_millis(100));
