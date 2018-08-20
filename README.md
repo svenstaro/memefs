@@ -1,7 +1,6 @@
-# memefs
-Mount your memes using FUSE
+# memefs - Mount your memes using FUSE
 
-> Every meme is file in unix
+> Every meme is a file in unix
 
 ## How to get memes into your unix
 
@@ -13,18 +12,24 @@ Mount your memes using FUSE
     > 'I declare these Fry Cook Games open!.jpg'                  'That escalated quickly..jpg'
     feh memes/'Oof my metal beam.jpg'
 
-## Options
+## What this does
 
-This "software" has a few "sensible" defaults. If you want to mix things up, see below.
+**memefs** will look at a given subreddit or multi and fetch a bunch of hot-sorted media posts. It then exposes them to the user as a filesystem. It also runs a background job to refresh the memes in order to ensure that your memes stay as dank as possible.
+
+## Change your memes
+
+This "software" has a few "sensible" defaults. Check the defaults in the help:
+
+    memefs --help
 
 If you require different memes, you can do
 
-    target/debug/memefs -s https://www.reddit.com/r/prequelmemes memes
+    memefs -s https://www.reddit.com/r/prequelmemes memes
     
-Likewise, if require very many memes at the same time, you can increase the limit:
+Likewise, if require more memes at the same time, you can increase the limit:
 
-    target/debug/memefs -l 50 memes
+    memefs -l 50 memes
 
 You can also refresh your memes every 60 seconds instead of 600 seconds:
 
-    target/debug/memefs -r 60 memes
+    memefs -r 60 memes
