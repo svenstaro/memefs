@@ -106,7 +106,7 @@ impl Filesystem for MemeFS {
             let entry = (*memes)
                 .iter()
                 .enumerate()
-                .find(|(_, post)| post.title == name.to_str().unwrap().to_owned());
+                .find(|(_, post)| post.title == name.to_str().unwrap());
             if let Some((ino, post)) = entry {
                 reply.entry(&ttl, &file_attr((ino + 2) as u64, post.size), 0);
             }
