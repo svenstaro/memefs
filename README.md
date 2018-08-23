@@ -16,7 +16,10 @@
 
 ## What this does
 
-**memefs** will look at a given subreddit or multi and fetch a bunch of hot-sorted media posts. It then exposes them to the user as a filesystem. It also runs a background job to refresh the memes in order to ensure that your memes stay as dank as possible.
+**memefs** will look at a given subreddit or multi and fetch a bunch of hot-sorted media posts.
+It then exposes them to the user as a filesystem.
+It also runs a background job to refresh the memes in order to ensure that your memes stay as dank as possible.
+So, in theory, this could have some useful use-cases such as fetching posts in a wallpapers subreddit.
 
 ## Change your memes
 
@@ -27,7 +30,7 @@ This "software" has a few "sensible" defaults. Check the defaults in the help:
 If you require different memes, you can do
 
     memefs -s https://www.reddit.com/r/prequelmemes memes
-    
+
 Likewise, if require more memes at the same time, you can increase the limit:
 
     memefs -l 50 memes
