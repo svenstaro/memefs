@@ -33,6 +33,10 @@ lazy_static! {
     static ref MEMEFSCONFIG: Mutex<MemeFSConfig> = Default::default();
 }
 
+lazy_static! {
+    static ref REQ_CLIENT: Mutex<reqwest::Client> = Mutex::new(reqwest::Client::new());
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct MemeFSConfig {
     mountpoint: String,
@@ -146,14 +150,18 @@ impl Filesystem for MemeFS {
         if ino == 1 {
             reply.error(ENOENT);
         } else {
-            let memes = MEMES.lock().expect("Couldn't acquire lock in read()");
+            let memes = MEMES
+                .lock()
+                .expect("Couldn't acquire lock to MEMES in read()");
             let entry = (*memes)
                 .iter()
                 .enumerate()
                 .find(|(i, _)| (*i + 2) == ino as usize);
             if let Some((_, post)) = entry {
-                let req_client = reqwest::Client::new();
                 let mut body_buf: Vec<u8> = vec![];
+                let req_client = REQ_CLIENT
+                    .lock()
+                    .expect("Couldn't acquire lock to REQ_CLIENT in read()");
                 let bytes_written = req_client
                     .get(&post.url)
                     .send()
@@ -200,7 +208,9 @@ impl Filesystem for MemeFS {
 }
 
 fn get_memes(memefs_config: &MemeFSConfig) -> Vec<Post> {
-    let req_client = reqwest::Client::new();
+    let req_client = REQ_CLIENT
+        .lock()
+        .expect("Couldn't acquire lock to REQ_CLIENT in get_memes()");
     let resp: Value = req_client
         .get(&format!(
             "{subreddit}/.json?limit={limit}",
