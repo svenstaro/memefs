@@ -27,13 +27,7 @@ use time::Timespec;
 
 lazy_static! {
     static ref MEMES: Mutex<Vec<Post>> = { Mutex::new(Vec::default()) };
-}
-
-lazy_static! {
     static ref MEMEFSCONFIG: Mutex<MemeFSConfig> = Default::default();
-}
-
-lazy_static! {
     static ref REQ_CLIENT: Mutex<reqwest::Client> = Mutex::new(reqwest::Client::new());
 }
 
