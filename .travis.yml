@@ -1,6 +1,11 @@
 language: rust
 cache: cargo
 
+addons:
+  apt:
+    packages:
+      - libfuse-dev
+
 rust:
   - stable
   - beta
