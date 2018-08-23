@@ -1,4 +1,4 @@
-# memefs - A filesystem for your memes
+# memefs - A filesystem for your memes [![Build Status](https://travis-ci.com/svenstaro/memefs.svg?branch=master)](https://travis-ci.com/svenstaro/memefs)
 
 **Mount your memes using FUSE**
 
