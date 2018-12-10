@@ -1,18 +1,11 @@
-extern crate ctrlc;
-extern crate fuse;
-extern crate libc;
-extern crate time;
-#[macro_use]
-extern crate clap;
-extern crate reqwest;
-extern crate serde_json;
-#[macro_use]
-extern crate lazy_static;
-
-use clap::{App, Arg, AppSettings};
+use clap::{
+    crate_authors, crate_description, crate_name, crate_version, value_t_or_exit, App, AppSettings,
+    Arg,
+};
 use fuse::{
     FileAttr, FileType, Filesystem, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry, Request,
 };
+use lazy_static::lazy_static;
 use libc::ENOENT;
 use serde_json::Value;
 use std::cmp::min;

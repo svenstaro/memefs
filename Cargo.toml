@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["fuse", "filesystem"]
 categories = ["filesystem"]
 license = "MIT"
+edition = "2018"
 
 [dependencies]
 fuse = "0.3"
