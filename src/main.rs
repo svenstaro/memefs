@@ -9,12 +9,11 @@ extern crate serde_json;
 #[macro_use]
 extern crate lazy_static;
 
-use clap::{App, Arg};
+use clap::{App, Arg, AppSettings};
 use fuse::{
     FileAttr, FileType, Filesystem, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry, Request,
 };
 use libc::ENOENT;
-use reqwest::header::ContentLength;
 use serde_json::Value;
 use std::cmp::min;
 use std::ffi::OsStr;
@@ -210,7 +209,8 @@ fn get_memes(memefs_config: &MemeFSConfig) -> Vec<Post> {
             "{subreddit}/.json?limit={limit}",
             subreddit = memefs_config.subreddit,
             limit = memefs_config.limit
-        )).send()
+        ))
+        .send()
         .expect("Error while fetching posts")
         .json()
         .expect("Can't parse posts as JSON");
@@ -252,8 +252,8 @@ fn get_memes(memefs_config: &MemeFSConfig) -> Vec<Post> {
                         .send()
                         .expect("HEAD request ")
                         .headers()
-                        .get::<ContentLength>()
-                        .map(|cl| **cl)
+                        .get("content-length")
+                        .map(|cl| cl.to_str().unwrap().parse::<u64>().unwrap())
                         .unwrap_or(0),
                 };
                 memes.push(meme);
@@ -268,35 +268,41 @@ fn parse_args() {
         .version(crate_version!())
         .about(crate_description!())
         .author(crate_authors!())
+        .setting(AppSettings::ColoredHelp)
         .arg(
             Arg::with_name("MOUNTPOINT")
                 .help("Choose the mountpoint")
                 .required(true)
                 .index(1),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("verbose")
                 .help("Be verbose")
                 .short("v")
                 .long("verbose"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("subreddit")
-                .help("Pick a subreddit or multi")
+                .help("Pick a subreddit or multi (requires subreddit URL)")
                 .short("s")
                 .default_value("https://www.reddit.com/user/Hydrauxine/m/memes")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("limit")
                 .help("How many memes to fetch at once")
                 .short("l")
                 .default_value("20")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("refresh_secs")
                 .help("How often to refresh your memes in secs")
                 .short("r")
                 .default_value("600")
                 .takes_value(true),
-        ).get_matches();
+        )
+        .get_matches();
     let mountpoint = matches.value_of("MOUNTPOINT").unwrap().to_owned();
     let verbose = matches.is_present("verbose");
     let subreddit = matches.value_of("subreddit").unwrap().to_owned();
@@ -328,7 +334,8 @@ fn main() {
 
     ctrlc::set_handler(move || {
         r.store(false, Ordering::SeqCst);
-    }).expect("Error setting Ctrl-C handler");
+    })
+    .expect("Error setting Ctrl-C handler");
 
     let _thread_handle = thread::spawn(move || loop {
         let config = MEMEFSCONFIG
