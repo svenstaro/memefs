@@ -1,4 +1,4 @@
-# memefs - A filesystem for your memes [![Build Status](https://travis-ci.com/svenstaro/memefs.svg?branch=master)](https://travis-ci.com/svenstaro/memefs)
+# memefs - A filesystem for your memes [![GitHub Actions Workflow](https://github.com/svenstaro/memefs/workflows/CI/badge.svg)](https://github.com/svenstaro/memefs/actions)
 
 **Mount your memes using FUSE**
 
