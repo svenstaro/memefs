@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - run: sudo apt instal libfuse-dev
+      - run: sudo apt install libfuse-dev
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
